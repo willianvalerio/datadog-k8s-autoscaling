@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-morgan
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: nodejs-morgan
+  template:
+    metadata:
+      labels:
+        app: nodejs-morgan
+      annotations:
+        ad.datadoghq.com/nodejs-morgan.logs: '[{"source":"nodejs","service":"nodejs-morgan"}]'
+    spec:
+      containers:
+      - name: nodejs-morgan
+        image: willianvalerio/dd-nodejs-morgan:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        env:
+        - name: DD_AGENT_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DOGSTATSD_HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: DD_LOGS_INJECTION
+          value: 'true'
+        - name: DD_SERVICE
+          value: 'nodejs-morgan'
+        - name: DD_ANALYTICS_ENABLED
+          value: 'true'
+        - name: DD_RUNTIME_METRICS_ENABLED
+          value: 'true'
+        resources:
+          limits:
+            cpu: 100m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-morgan
+spec:
+  selector:
+    app: nodejs-morgan
+  ports:
+  - name: http
+    protocol: TCP
+    port: 3000
+  type: ClusterIP

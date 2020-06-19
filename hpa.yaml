@@ -1,0 +1,19 @@
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nodejs-morgan
+spec:
+  minReplicas: 1
+  maxReplicas: 10
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nodejs-morgan
+  metrics:
+  - type: External
+    external:
+      metricName: trace.express.request.hits
+      metricSelector:
+        matchLabels:
+            service: nodejs-morgan
+      targetAverageValue: 9

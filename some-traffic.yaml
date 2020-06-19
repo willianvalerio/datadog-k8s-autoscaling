@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: some-traffic
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: some-traffic
+  template:
+    metadata:
+      labels:
+        app: some-traffic
+    spec:
+      containers:
+      - name: some-traffic
+        image: curlimages/curl
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        #args: ["-c", "while true; do echo hello; sleep 10;done"]
+        args: ["-c", "while true; do curl -s nodejs-morgan:3000; sleep 3; done"]
+        resources:
+          limits:
+            cpu: 100m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 100Mi
